@@ -46,22 +46,31 @@ function getMessage(messageId) {
   p.then(res => {
 
     let blob = res.data.payload.parts[0].body.data;
+    let headers = res.data.payload.headers, i = 0;
 
-    let str = Buffer.from(blob, 'base64')
-      .toString('utf-8').trim();
-    
-    console.log(str);
-    //console.log(str.split('\r\n'));
-    
+    while (headers[i].name !== "From") i++;
+
     /*
-    list.forEach(part => {
-      let blob = part.body.data;
-      let message = Buffer.from(blob, 'base64')
-        .toString('utf-8');
-      console.log(message);
-    }) 
-      */
+    There are two values inside 'From' header 
+    separated by a space. These two values are 
+    sender name and sender email.
+    */
     
+    const sender = headers[i].value.split(' ');
+
+
+    let arr = Buffer.from(blob, 'base64')
+      .toString('utf-8').trim().split('\r\n');
+
+    let message = "";
+ 
+    arr.forEach((ele, idx) => {
+      arr[idx] = arr[idx].trim();
+      if (arr[idx].length != 0)
+        message += arr[idx] + '\n';
+    })
+
+    console.log(`\nSender-name: ${sender[0]}\nSender-email: ${sender[1]}\nMail-body (plaintext):\n${message}`);
   });
 
 }
