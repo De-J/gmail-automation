@@ -4,14 +4,14 @@
   This file contains wrapper functions for promises.
   Since the same API calls are being used in multiple 
   functions, defining them as promises in a separate
-  file reduces code duplication. 
+  file reducing code duplication. 
   *
   *
 **/
 
-const listMessages = () => {
+const fetchMessageList = () => {
   return new Promise((resolve, reject) => {
-    gmail.user.messages.list(
+    gmail.users.messages.list(
       {
         userId: 'me',
         q: 'is:unread'
@@ -43,4 +43,4 @@ const fetchMessage = (messageId) => {
   });
 }
 
-module.exports = { listMessages, fetchMessage };
+module.exports = { fetchMessageList, fetchMessage };
