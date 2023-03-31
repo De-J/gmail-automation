@@ -1,78 +1,78 @@
-const { gmail } = require('./auth.js');
+const { fetchMessageList, fetchMessage } = require('./promises.js');
 
-function getNewMessages() {
-  const p = new Promise((resolve, reject) => {
-    gmail.users.messages.list(
-    {
-      userId: 'me',
-      q: 'is:unread',
-      //maxResults: 50 
-    }
-    , (err, res) => {
-        if (err) 
-          reject(err);
-        else 
-          resolve(res); 
-    })
-  });
-
-  p.then(res => {
+const showNewMessages = async () => {
+  try {
+    const res = await fetchMessageList();
     const messages = res.data.messages;
     console.log(`You have ${messages.length} new message(s)`);
     
     messages.forEach((message, cnt) => {
-      console.log(cnt, message.id);
+      console.log(cnt+1, message.id);
     })
-  }).catch((error) => console.log(error));
-
+  }
+  catch (error) {
+    console.log(error)
+  }
 }
 
 
-function getMessage(messageId) {
-  const p = new Promise((resolve, reject) => {
-    gmail.users.messages.get(
-    { 
-      userId: 'me',
-      id: messageId 
-    }
-    , (err, res) => {
-        if (err)
-          reject(err);
-        else 
-          resolve(res);
-    })
-  });
-          
-  p.then(res => {
-
+const showMessage = async (messageId) => {
+  try {
+    const res = await fetchMessage(messageId);
     let blob = res.data.payload.parts[0].body.data;
-    let headers = res.data.payload.headers, i = 0;
+    let headers = res.data.payload.headers;
 
-    while (headers[i].name !== "From") i++;
-
-    /*
-    There are two values inside 'From' header 
-    separated by a space. These two values are 
-    sender name and sender email.
-    */
-    
-    const sender = headers[i].value.split(' ');
-
-
-    let arr = Buffer.from(blob, 'base64')
-      .toString('utf-8').trim().split('\r\n');
-
+    getHeaders(headers, true).forEach(header => 
+      console.log(`${header.name} : ${header.value}\n`)
+    );
+      
+    let arr = Buffer.from(blob, 'base64').toString('utf-8').trim().split('\r\n');
     let message = "";
- 
     arr.forEach((ele, idx) => {
       arr[idx] = arr[idx].trim();
       if (arr[idx].length != 0)
         message += arr[idx] + '\n';
-    })
+    });
 
-    console.log(`\nSender-name: ${sender[0]}\nSender-email: ${sender[1]}\nMail-body (plaintext):\n${message}`);
-  });
-
+    console.log(`Mail-body (plaintext):\n${message}`);
+  }
+  catch(err) {
+    console.log(err);
+  }
 }
 
-module.exports = { getNewMessages, getMessage };
+function getHeaders(param, isList = false, returnAll = false) {
+/**
+  
+  Returns a list of objects, where each object 
+  contains a header name and the corresponding 
+  header value as properties. 
+  
+  The value of isList argument specifies whether 
+  the first argument passed is a string (containing
+  the message Id) or a list (containing individual
+  email headers as objects).
+
+  The value of returnAll argument specifies whether
+  to return all the email headers (if true) or only
+  To, From and Subject headers.
+
+**/
+
+  let headers = [];
+  if (!isList) {
+    fetchMessage(param).then(res =>
+      headers = res.data.payload.headers
+    )
+  }
+  else
+      headers = param;
+
+  if (returnAll)
+    return headers;
+  else 
+    return headers.filter(obj => (obj.name == "From" || obj.name == "To" || obj.name == "Subject"));
+}
+
+
+module.exports = { showNewMessages, showMessage, getHeaders };
