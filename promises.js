@@ -44,4 +44,24 @@ const fetchMessage = (messageId) => {
   });
 }
 
-module.exports = { fetchMessageList, fetchMessage };
+
+const sendMessage = (base64Blob) => {
+  return new Promise((resolve, reject) => {
+    gmail.users.messages.send(
+      {
+        userId: 'me',
+        requestBody: {
+          raw: base64Blob
+        }
+      }
+      , (err, res) => {
+        if (err)
+          reject(err);
+        else
+          resolve(res);
+      });
+  });
+}
+
+
+module.exports = { sendMessage, fetchMessageList, fetchMessage };

@@ -1,47 +1,7 @@
-const { fetchMessageList, fetchMessage } = require('./promises.js');
+const { fetchMessageList, fetchMessage, sendMessage } = require('./promises.js');
+const fs = require('fs').promises;
 
-const showNewMessages = async () => {
-  try {
-    const res = await fetchMessageList();
-    const messages = res.data.messages;
-    console.log(`You have ${messages.length} new message(s)`);
-    
-    messages.forEach((message, cnt) => {
-      console.log(cnt+1, message.id);
-    })
-  }
-  catch (error) {
-    console.log(error)
-  }
-}
-
-
-const showMessage = async (messageId) => {
-  try {
-    const res = await fetchMessage(messageId);
-    let blob = res.data.payload.parts[0].body.data;
-    let headers = res.data.payload.headers;
-
-    getHeaders(headers, true).forEach(header => 
-      console.log(`${header.name} : ${header.value}\n`)
-    );
-      
-    let arr = Buffer.from(blob, 'base64').toString('utf-8').trim().split('\r\n');
-    let message = "";
-    arr.forEach((ele, idx) => {
-      arr[idx] = arr[idx].trim();
-      if (arr[idx].length != 0)
-        message += arr[idx] + '\n';
-    });
-
-    console.log(`Mail-body (plaintext):\n${message}`);
-  }
-  catch(err) {
-    console.log(err);
-  }
-}
-
-function getHeaders(param, isList = false, returnAll = false) {
+const getHeaders = async (param, isList = false, returnAll = false) => {
 /**
   
   Returns a list of objects, where each object 
@@ -61,9 +21,8 @@ function getHeaders(param, isList = false, returnAll = false) {
 
   let headers = [];
   if (!isList) {
-    fetchMessage(param).then(res =>
-      headers = res.data.payload.headers
-    )
+    const res = await fetchMessage(param);
+    headers = res.data.payload.headers;
   }
   else
       headers = param;
@@ -74,5 +33,74 @@ function getHeaders(param, isList = false, returnAll = false) {
     return headers.filter(obj => (obj.name == "From" || obj.name == "To" || obj.name == "Subject"));
 }
 
+const showNewMessages = async () => {
+  try {
+    const res = await fetchMessageList();
+    const messages = res.data.messages;
+    console.log(`You have ${messages.length} new message(s)`);
+    
+    messages.forEach((message, cnt) => {
+      console.log(cnt+1, message.id);
+    })
+  }
+  catch (error) {
+    console.log(error)
+  }
+}
 
-module.exports = { showNewMessages, showMessage, getHeaders };
+const showMessage = async (messageId) => {
+  try {
+    const res = await fetchMessage(messageId);
+    let blob = res.data.payload.parts[0].body.data;
+    let headers = res.data.payload.headers;
+
+    const list = await getHeaders(headers, true);
+      list.forEach(header => {
+      console.log(`${header.name} : ${header.value}\n`)
+    });
+      
+    let arr = Buffer.from(blob, 'base64').toString('utf-8').trim().split('\r\n');
+    let message = "";
+    arr.forEach((ele, idx) => {
+      arr[idx] = arr[idx].trim();
+      if (arr[idx].length != 0)
+        message += arr[idx] + '\n';
+    });
+
+    console.log(`Mail-body (plaintext):\n${message}`);
+  }
+  catch(err) {
+    console.log(err);
+  }
+}
+
+const composeAndSend = async (headers) => {
+  let mail = '';
+  /*
+  for (let header of headers) {
+    switch (header.name) {
+      case 'From':
+        mail += "To: "
+        break;
+      case 'Subject':
+        mail += "Subject: "
+        break;
+      
+      default:
+        break;
+    }
+    if (header.name != 'To')
+      mail += `${header.value}\n`
+  }
+  */
+
+  const mailBody = await fs.readFile('./message.txt', 'utf-8')
+  mail += mailBody;
+  console.log(mail);
+  const blob = btoa(mail);
+
+  const res = await sendMessage(blob);
+  console.log(res);
+}
+
+module.exports = { composeAndSend, showNewMessages, showMessage, getHeaders };
