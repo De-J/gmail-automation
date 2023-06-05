@@ -10,12 +10,13 @@ const { gmail } = require('./auth.js');
   *
 **/
 
-const fetchMessageList = () => {
+const fetchMessageList = (labelIds = []) => {
   return new Promise((resolve, reject) => {
     gmail.users.messages.list(
       {
         userId: 'me',
-        q: 'is:unread'
+        q: 'is:read',
+        labelIds: labelIds
         //maxResults: 50
       }
       , (err, res) => {
@@ -63,5 +64,24 @@ const sendMessage = (base64Blob) => {
   });
 }
 
+const createLabel = (labelName) => {
+  return new Promise((resolve, reject) => {
+    gmail.users.labels.create(
+      {
+        userId: 'me',
+        requestBody: {
+          labelListVisibility: 'labelShow',
+          messageListVisibility: 'show',
+          name: labelName
+        }
+      },
+      (err, res) => {
+        if (err)
+          reject(err);
+        else
+          resolve(res);
+      });
+  })
+}
 
-module.exports = { sendMessage, fetchMessageList, fetchMessage };
+module.exports = { sendMessage, fetchMessageList, fetchMessage, createLabel };

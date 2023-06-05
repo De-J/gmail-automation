@@ -33,9 +33,9 @@ const getHeaders = async (param, isList = false, returnAll = false) => {
     return headers.filter(obj => (obj.name == "From" || obj.name == "To" || obj.name == "Subject"));
 }
 
-const showNewMessages = async () => {
+const showNewMessages = async (labelIds = []) => {
   try {
-    const res = await fetchMessageList();
+    const res = await fetchMessageList(labelIds);
     const messages = res.data.messages;
     console.log(`You have ${messages.length} new message(s)`);
     
@@ -76,7 +76,6 @@ const showMessage = async (messageId) => {
 
 const composeAndSend = async (headers) => {
   let mail = '';
-  /*
   for (let header of headers) {
     switch (header.name) {
       case 'From':
@@ -92,15 +91,16 @@ const composeAndSend = async (headers) => {
     if (header.name != 'To')
       mail += `${header.value}\n`
   }
-  */
 
   const mailBody = await fs.readFile('./message.txt', 'utf-8')
   mail += mailBody;
   console.log(mail);
   const blob = btoa(mail);
 
-  const res = await sendMessage(blob);
-  console.log(res);
+  //const res = await sendMessage(blob);
+  //console.log(res);
 }
+
+
 
 module.exports = { composeAndSend, showNewMessages, showMessage, getHeaders };
