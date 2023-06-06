@@ -1,6 +1,6 @@
 const { fetchMessageList, fetchMessage, sendMessage } = require('./promises.js');
 const fs = require('fs').promises;
-
+const Buffer = require('node:buffer');
 const getHeaders = async (param, isList = false, returnAll = false) => {
 /**
   
@@ -42,6 +42,7 @@ const showNewMessages = async (labelIds = []) => {
     messages.forEach((message, cnt) => {
       console.log(cnt+1, message.id);
     })
+    return messages;
   }
   catch (error) {
     console.log(error)
@@ -84,9 +85,7 @@ const composeAndSend = async (headers) => {
       case 'Subject':
         mail += "Subject: "
         break;
-      
       default:
-        break;
     }
     if (header.name != 'To')
       mail += `${header.value}\n`
@@ -94,11 +93,11 @@ const composeAndSend = async (headers) => {
 
   const mailBody = await fs.readFile('./message.txt', 'utf-8')
   mail += mailBody;
-  console.log(mail);
-  const blob = btoa(mail);
+  console.log(`Your mail body is "${mail}"`);
+  const base64Blob = Buffer.from(mail).toString('base64');
 
-  //const res = await sendMessage(blob);
-  //console.log(res);
+  const res = await sendMessage(base64Blob);
+  console.log(res);
 }
 
 
