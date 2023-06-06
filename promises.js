@@ -5,7 +5,7 @@ const { gmail } = require('./auth.js');
   This file contains wrapper functions for promises.
   Since the same API calls are being used in multiple 
   functions, defining them as promises in a separate
-  file reducing code duplication. 
+  file reduces code duplication. 
   *
   *
 **/
@@ -15,7 +15,7 @@ const fetchMessageList = (labelIds = []) => {
     gmail.users.messages.list(
       {
         userId: 'me',
-        q: 'is:read',
+        q: 'is:unread',
         labelIds: labelIds
         //maxResults: 50
       }
@@ -84,4 +84,30 @@ const createLabel = (labelName) => {
   })
 }
 
-module.exports = { sendMessage, fetchMessageList, fetchMessage, createLabel };
+const changeMessageLabels = (messageId, labelIds) => {
+  return new Promise((resolve, reject) => {
+    gmail.users.messages.modify(
+      {
+        userId: 'me',
+        id: messageId,
+        requestBody: {
+          addLabelIds: labelIds
+        }
+      },
+      (err, res) => {
+        if (err)
+          reject(err);
+        else
+          resolve(res);
+      }
+    )
+  });
+}
+
+module.exports = 
+{
+   sendMessage, 
+   fetchMessageList, 
+   fetchMessage, 
+   createLabel,
+   changeMessageLabels };
