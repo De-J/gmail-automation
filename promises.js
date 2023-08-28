@@ -104,10 +104,36 @@ const changeMessageLabels = (messageId, labelIds) => {
   });
 }
 
-module.exports = 
+
+// const changeMessageLabels_multiple = () => {
+//   return new Promise((resolve, reject) => {
+//     gmail.users.messages.batchModify
+//   })
+// }
+
+
+
+const getLabelList = () => {
+  return new Promise((resolve, reject) => {
+    gmail.users.labels.list({
+      userId: 'me',
+    },
+      (err, res) => {
+        if (err)
+          reject(err);
+        else
+          resolve(res);
+      }
+    )
+  });
+}
+
+module.exports =
 {
-   sendMessage, 
-   fetchMessageList, 
-   fetchMessage, 
-   createLabel,
-   changeMessageLabels };
+  sendMessage,
+  fetchMessageList,
+  fetchMessage,
+  createLabel,
+  changeMessageLabels,
+  getLabelList
+};
